@@ -3,6 +3,7 @@ import signal
 from core.binance.ws_client import BinanceWebSocketClient
 from core.kafka.producer import KafkaProducerClient
 from core.utils.logger import get_logger
+from core.metrics.metrics import ticks_produced_total, ws_connection_active
 from infra.kafka.topics import TOPIC_TICKS
 from src.producers.market_data.mapper import map_trade_to_tick
 
@@ -23,6 +24,7 @@ class MarketDataProducer:
                 key=tick.symbol,
                 value=tick.to_dict(),
             )
+            ticks_produced_total.labels(symbol=tick.symbol).inc()
         except Exception as e:
             logger.error(f"Failed to process trade message: {e}")
 
@@ -39,6 +41,7 @@ class MarketDataProducer:
         logger.info("MarketDataProducer starting...")
 
         await self._producer.start()
+        ws_connection_active.set(1)
 
         try:
             await self._ws_client.connect(self._on_message)
@@ -53,6 +56,7 @@ class MarketDataProducer:
         logger.info("MarketDataProducer shutting down...")
 
         self._ws_client.stop()
+        ws_connection_active.set(0)
         await self._producer.stop()
 
         logger.info("MarketDataProducer stopped.")

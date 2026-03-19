@@ -2,6 +2,7 @@ from core.kafka.consumer import KafkaConsumerClient
 from core.kafka.producer import KafkaProducerClient
 from core.kafka.schemas import TickEvent
 from core.utils.logger import get_logger
+from core.metrics.metrics import candles_emitted_total, message_processing_duration
 from infra.kafka.topics import TOPIC_TICKS, TOPIC_CANDLES_1S
 from src.services.candle_service import CandleAggregator
 
@@ -18,16 +19,18 @@ class Candle1sConsumer:
         self._aggregator = CandleAggregator(interval_ms=1000, interval_label="1s")
 
     async def _handle(self, message: dict) -> None:
-        tick = TickEvent.from_dict(message)
-        candle = self._aggregator.process_tick(tick)
+        with message_processing_duration.labels(component="candle_1s").time():
+            tick = TickEvent.from_dict(message)
+            candle = self._aggregator.process_tick(tick)
 
-        if candle:
-            await self._producer.send(
-                topic=TOPIC_CANDLES_1S,
-                key=candle.symbol,
-                value=candle.to_dict(),
-            )
-            logger.info(f"Candle 1s emitted: {candle.symbol} open={candle.open}")
+            if candle:
+                await self._producer.send(
+                    topic=TOPIC_CANDLES_1S,
+                    key=candle.symbol,
+                    value=candle.to_dict(),
+                )
+                candles_emitted_total.labels(symbol=candle.symbol, interval="1s").inc()
+                logger.info(f"Candle 1s emitted: {candle.symbol} open={candle.open}")
 
     async def start(self) -> None:
         await self._producer.start()

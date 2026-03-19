@@ -2,6 +2,7 @@ from core.kafka.consumer import KafkaConsumerClient
 from core.kafka.schemas import IndicatorEvent
 from core.db.postgres import PostgresClient
 from core.utils.logger import get_logger
+from core.metrics.metrics import records_persisted_total, batch_flush_duration
 from infra.kafka.topics import TOPIC_INDICATORS_PERSISTED
 
 logger = get_logger(__name__)
@@ -42,7 +43,9 @@ class IndicatorStorageConsumer:
         if not self._batch:
             return
 
-        await self._db.executemany(INSERT_INDICATOR_SQL, self._batch)
+        with batch_flush_duration.labels(table="indicators").time():
+            await self._db.executemany(INSERT_INDICATOR_SQL, self._batch)
+        records_persisted_total.labels(table="indicators").inc(len(self._batch))
         logger.info(f"Indicators persisted: {len(self._batch)} records")
         self._batch.clear()
 

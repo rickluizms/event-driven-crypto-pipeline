@@ -35,8 +35,13 @@ async def _run_component(name: str, instance) -> None:
 
 
 async def run_components(names: list[str]) -> None:
+    from core.metrics.server import start_metrics_server
+
     instances = []
     tasks = []
+
+    # Start metrics server first
+    tasks.append(asyncio.create_task(start_metrics_server()))
 
     for name in names:
         if name not in COMPONENTS:

@@ -2,6 +2,7 @@ from core.kafka.consumer import KafkaConsumerClient
 from core.kafka.schemas import CandleEvent
 from core.db.postgres import PostgresClient
 from core.utils.logger import get_logger
+from core.metrics.metrics import records_persisted_total, batch_flush_duration
 from infra.kafka.topics import TOPIC_CANDLES_1S
 
 logger = get_logger(__name__)
@@ -46,7 +47,9 @@ class CandleStorageConsumer:
         if not self._batch:
             return
 
-        await self._db.executemany(INSERT_CANDLE_SQL, self._batch)
+        with batch_flush_duration.labels(table="candles").time():
+            await self._db.executemany(INSERT_CANDLE_SQL, self._batch)
+        records_persisted_total.labels(table="candles").inc(len(self._batch))
         logger.info(f"Candles persisted: {len(self._batch)} records")
         self._batch.clear()
 
