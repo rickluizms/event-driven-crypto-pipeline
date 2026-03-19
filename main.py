@@ -1,7 +1,11 @@
 import asyncio
 import argparse
 import signal
+import sys
 from core.utils.logger import get_logger
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 logger = get_logger(__name__)
 
@@ -23,6 +27,13 @@ def _import_component(dotted_path: str):
     return getattr(module, class_name)
 
 
+async def _run_component(name: str, instance) -> None:
+    try:
+        await instance.start()
+    except Exception as e:
+        logger.error(f"Component '{name}' failed: {e}")
+
+
 async def run_components(names: list[str]) -> None:
     instances = []
     tasks = []
@@ -34,17 +45,15 @@ async def run_components(names: list[str]) -> None:
 
         cls = _import_component(COMPONENTS[name])
         instance = cls()
-        instances.append(instance)
+        instances.append((name, instance))
         logger.info(f"Starting component: {name}")
-        tasks.append(asyncio.create_task(instance.start()))
+        tasks.append(asyncio.create_task(_run_component(name, instance)))
 
     loop = asyncio.get_running_loop()
-    stop_event = asyncio.Event()
 
     def _shutdown():
         logger.info("Shutdown signal received")
-        stop_event.set()
-        for inst in instances:
+        for _, inst in instances:
             if hasattr(inst, "stop"):
                 asyncio.create_task(inst.stop())
 
@@ -55,7 +64,7 @@ async def run_components(names: list[str]) -> None:
             pass
 
     try:
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
     except asyncio.CancelledError:
         pass
 

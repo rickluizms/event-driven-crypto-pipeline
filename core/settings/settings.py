@@ -6,13 +6,13 @@ from pydantic import computed_field
 class KafkaSettings(BaseSettings):
     bootstrap_servers: str = "localhost:9092"
 
-    model_config = {"env_prefix": "KAFKA_"}
+    model_config = {"env_prefix": "KAFKA_", "env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 class RedisSettings(BaseSettings):
     url: str = "redis://localhost:6379/0"
 
-    model_config = {"env_prefix": "REDIS_"}
+    model_config = {"env_prefix": "REDIS_", "env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 class PostgresSettings(BaseSettings):
@@ -22,19 +22,19 @@ class PostgresSettings(BaseSettings):
     password: str = "postgres"
     db: str = "crypto_pipeline"
 
-    model_config = {"env_prefix": "POSTGRES_"}
+    model_config = {"env_prefix": "POSTGRES_", "env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
     @computed_field
     @property
     def dsn(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}?sslmode=disable"
 
 
 class BinanceSettings(BaseSettings):
     ws_url: str = "wss://stream.binance.com:9443"
     symbols: str = "ethusdt,btcusdt"
 
-    model_config = {"env_prefix": "BINANCE_"}
+    model_config = {"env_prefix": "BINANCE_", "env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
     @property
     def symbol_list(self) -> list[str]:
@@ -48,6 +48,8 @@ class AppSettings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     postgres: PostgresSettings = PostgresSettings()
     binance: BinanceSettings = BinanceSettings()
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 @lru_cache

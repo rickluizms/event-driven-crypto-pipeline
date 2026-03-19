@@ -1,4 +1,6 @@
-import asyncpg
+import psycopg
+from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
 from core.utils.logger import get_logger
 from core.settings.settings import get_settings
 
@@ -35,38 +37,59 @@ CREATE TABLE IF NOT EXISTS indicators (
 
 class PostgresClient:
     def __init__(self):
-        self._pool: asyncpg.Pool | None = None
+        self._pool: AsyncConnectionPool | None = None
 
     async def create_pool(self) -> None:
         settings = get_settings()
-        self._pool = await asyncpg.create_pool(
-            dsn=settings.postgres.dsn,
+        conninfo = (
+            f"host={settings.postgres.host} "
+            f"port={settings.postgres.port} "
+            f"user={settings.postgres.user} "
+            f"password={settings.postgres.password} "
+            f"dbname={settings.postgres.db}"
+        )
+        self._pool = AsyncConnectionPool(
+            conninfo=conninfo,
             min_size=2,
             max_size=10,
+            open=False,
         )
+        await self._pool.open(wait=True)
         logger.info("PostgreSQL connection pool created")
 
-    def _get_pool(self) -> asyncpg.Pool:
+    def _get_pool(self) -> AsyncConnectionPool:
         if not self._pool:
             raise RuntimeError("Pool not created. Call create_pool() first.")
         return self._pool
 
-    async def execute(self, query: str, *args) -> str:
+    async def execute(self, query: str, *args) -> None:
         pool = self._get_pool()
-        return await pool.execute(query, *args)
+        async with pool.connection() as conn:
+            await conn.execute(query, args if args else None)
 
     async def executemany(self, query: str, args_list: list) -> None:
         pool = self._get_pool()
-        async with pool.acquire() as conn:
-            await conn.executemany(query, args_list)
+        # Convert $1, $2 style placeholders to %s for psycopg
+        converted_query = _convert_placeholders(query)
+        async with pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.executemany(converted_query, args_list)
 
-    async def fetch(self, query: str, *args) -> list:
+    async def fetch(self, query: str, *args) -> list[dict]:
         pool = self._get_pool()
-        return await pool.fetch(query, *args)
+        converted_query = _convert_placeholders(query)
+        async with pool.connection() as conn:
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(converted_query, args if args else None)
+                return await cur.fetchall()
 
-    async def fetchrow(self, query: str, *args):
+    async def fetchrow(self, query: str, *args) -> dict | None:
         pool = self._get_pool()
-        return await pool.fetchrow(query, *args)
+        converted_query = _convert_placeholders(query)
+        async with pool.connection() as conn:
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(converted_query, args if args else None)
+                return await cur.fetchone()
 
     async def init_tables(self) -> None:
         await self.execute(CANDLES_DDL)
@@ -78,3 +101,9 @@ class PostgresClient:
             await self._pool.close()
             self._pool = None
             logger.info("PostgreSQL connection pool closed")
+
+
+def _convert_placeholders(query: str) -> str:
+    """Convert asyncpg-style $1, $2 placeholders to psycopg %s style."""
+    import re
+    return re.sub(r'\$\d+', '%s', query)

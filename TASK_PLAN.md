@@ -205,23 +205,23 @@
 ## Phase 9 — Testing (`tests/`)
 
 ### 9.1 Unit Tests
-- [ ] `tests/unit/services/test_candle_service.py` — test candle aggregation logic
-- [ ] `tests/unit/services/test_indicator_service.py` — test SMA, EMA, RSI, VWAP calculations
-- [ ] `tests/unit/services/test_selector_service.py` — test routing decisions
-- [ ] `tests/unit/producers/test_mapper.py` — test tick mapping from raw Binance data
+- [x] `tests/unit/services/test_candle_service.py` — test candle aggregation logic
+- [x] `tests/unit/services/test_indicator_service.py` — test SMA, EMA, RSI, VWAP calculations
+- [x] `tests/unit/services/test_selector_service.py` — test routing decisions
+- [x] `tests/unit/producers/test_mapper.py` — test tick mapping from raw Binance data
 
 ### 9.2 Integration Tests
-- [ ] `tests/integration/test_producer_consumer.py` — end-to-end flow: produce tick → consume candle → verify
-- [ ] `tests/integration/test_cache_consumer.py` — verify Redis receives correct indicator data
-- [ ] `tests/integration/test_storage_consumer.py` — verify PostgreSQL receives correct records
-- [ ] `tests/integration/test_api.py` — test API endpoints return expected data from Redis/Postgres
+- [x] `tests/integration/test_producer_consumer.py` — end-to-end flow: produce tick → consume candle → verify
+- [x] `tests/integration/test_cache_consumer.py` — verify Redis receives correct indicator data
+- [x] `tests/integration/test_storage_consumer.py` — verify PostgreSQL receives correct records
+- [x] `tests/integration/test_api.py` — test API endpoints return expected data from Redis/Postgres
 
 ---
 
 ## Phase 10 — Documentation & Polish
 
 ### 10.1 README
-- [ ] Write comprehensive `README.md` with:
+- [x] Write comprehensive `README.md` with:
   - Project overview and architecture diagram
   - Prerequisites (Docker, Python 3.10+)
   - Setup & running instructions
@@ -229,11 +229,11 @@
   - API documentation summary
 
 ### 10.2 Code Quality
-- [ ] Add type hints across all modules
-- [ ] Ensure consistent naming conventions
-- [ ] Verify no business logic in `core/` layer
-- [ ] Verify no infrastructure code in `src/services/`
-- [ ] Remove all placeholder/stub code
+- [x] Add type hints across all modules
+- [x] Ensure consistent naming conventions
+- [x] Verify no business logic in `core/` layer
+- [x] Verify no infrastructure code in `src/services/`
+- [x] Remove all placeholder/stub code
 
 ---
 
