@@ -1,3 +1,9 @@
+import sys
+import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,18 +14,18 @@ from api.routes.indicators import router as indicators_router
 
 logger = get_logger(__name__)
 
-redis_client = RedisClient()
-postgres_client = PostgresClient()
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await redis_client.connect()
-    await postgres_client.create_pool()
+    # Initialize clients and store in app.state
+    app.state.redis = RedisClient()
+    app.state.postgres = PostgresClient()
+    
+    await app.state.redis.connect()
+    await app.state.postgres.create_pool()
     logger.info("API dependencies initialized")
     yield
-    await redis_client.close()
-    await postgres_client.close()
+    await app.state.redis.close()
+    await app.state.postgres.close()
     logger.info("API dependencies cleaned up")
 
 

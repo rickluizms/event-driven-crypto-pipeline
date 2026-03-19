@@ -1,18 +1,15 @@
-from fastapi import APIRouter, Query
-from core.cache.redis_client import RedisClient
-from core.db.postgres import PostgresClient
+from fastapi import APIRouter, Query, Request
 
 router = APIRouter()
-
-redis_client = RedisClient()
-postgres_client = PostgresClient()
 
 
 @router.get("/{symbol}")
 async def get_latest_indicators(
     symbol: str,
+    request: Request,
     interval: str = Query(default="1s", description="Candle interval (1s, 1m)"),
 ):
+    redis_client = request.app.state.redis
     indicators = {}
     for name in ["SMA", "EMA", "RSI", "VWAP"]:
         cache_key = f"indicator:{symbol}:{name}:{interval}"
@@ -30,10 +27,12 @@ async def get_latest_indicators(
 @router.get("/{symbol}/history")
 async def get_indicator_history(
     symbol: str,
+    request: Request,
     interval: str = Query(default="1s", description="Candle interval"),
     indicator_name: str = Query(default=None, description="Indicator name filter"),
     limit: int = Query(default=100, ge=1, le=1000, description="Max records"),
 ):
+    postgres_client = request.app.state.postgres
     query = """
         SELECT symbol, interval, name, value, timestamp
         FROM indicators

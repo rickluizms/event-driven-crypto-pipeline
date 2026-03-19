@@ -1,11 +1,12 @@
-import asyncio
-import argparse
-import signal
 import sys
-from core.utils.logger import get_logger
+import asyncio
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+import argparse
+import signal
+from core.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -78,7 +79,24 @@ async def run_components(names: list[str]) -> None:
 
 def run_api(host: str = "0.0.0.0", port: int = 8000) -> None:
     import uvicorn
-    uvicorn.run("api.main:app", host=host, port=port, reload=False)
+    # Set policy again to be absolutely sure
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    # Import app here after policy is set
+    from api.main import app
+    
+    config = uvicorn.Config(
+        app, 
+        host=host, 
+        port=port, 
+        log_level="info", 
+        loop="asyncio"
+    )
+    server = uvicorn.Server(config)
+    
+    # asyncio.run() will use the SelectorEventLoopPolicy we set
+    asyncio.run(server.serve())
 
 
 def main():
