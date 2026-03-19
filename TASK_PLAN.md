@@ -175,30 +175,30 @@
 ## Phase 7 — REST API (`api/`)
 
 ### 7.1 FastAPI App (`api/main.py`)
-- [ ] Initialize FastAPI application
-- [ ] Register routers
-- [ ] Configure CORS if needed
-- [ ] Add health-check endpoint (`GET /health`)
+- [x] Initialize FastAPI application
+- [x] Register routers
+- [x] Configure CORS if needed
+- [x] Add health-check endpoint (`GET /health`)
 
 ### 7.2 Indicators Route (`api/routes/indicators.py`)
-- [ ] `GET /indicators/{symbol}` — fetch latest indicators from Redis
-- [ ] `GET /indicators/{symbol}/history` — fetch historical indicators from PostgreSQL
-- [ ] Add query params for interval, indicator name, time range
+- [x] `GET /indicators/{symbol}` — fetch latest indicators from Redis
+- [x] `GET /indicators/{symbol}/history` — fetch historical indicators from PostgreSQL
+- [x] Add query params for interval, indicator name, time range
 
 ---
 
 ## Phase 8 — Orchestration & Scripts
 
 ### 8.1 Main Entry Point (`main.py`)
-- [ ] Implement CLI or runner that starts:
+- [x] Implement CLI or runner that starts:
   - Market Data Producer
   - All consumers (candle, indicator, cache, storage)
-- [ ] Support starting individual components via CLI args (e.g., `--producer`, `--consumer candle_1s`)
-- [ ] Handle graceful shutdown (SIGINT/SIGTERM)
+- [x] Support starting individual components via CLI args (e.g., `--producer`, `--consumer candle_1s`)
+- [x] Handle graceful shutdown (SIGINT/SIGTERM)
 
 ### 8.2 Replay Script (`scripts/replay.py`)
-- [ ] Implement offset reset / replay utility for a given topic and consumer group
-- [ ] Support replay from beginning or from a specific timestamp
+- [x] Implement offset reset / replay utility for a given topic and consumer group
+- [x] Support replay from beginning or from a specific timestamp
 
 ---
 
