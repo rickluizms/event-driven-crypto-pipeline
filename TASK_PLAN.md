@@ -8,24 +8,24 @@
 ## Phase 1 — Project Foundation & Infrastructure
 
 ### 1.1 Docker Compose Setup
-- [ ] Create `docker/docker-compose.yml` with services:
+- [x] Create `docker/docker-compose.yml` with services:
   - **Zookeeper** (required by Kafka)
   - **Kafka** (single broker, exposed on `localhost:9092`)
   - **Redis** (exposed on `localhost:6379`)
   - **PostgreSQL** (exposed on `localhost:5432`, with initial DB creation)
-- [ ] Add a `.env.example` with all required environment variables (Kafka broker, Redis URL, Postgres DSN, Binance WS URL, symbols list)
+- [x] Add a `.env.example` with all required environment variables (Kafka broker, Redis URL, Postgres DSN, Binance WS URL, symbols list)
 
 ### 1.2 Settings & Configuration (`core/settings/settings.py`)
-- [ ] Implement a centralized config module using `pydantic-settings` (or `os.environ`)
-- [ ] Define settings groups: Kafka, Redis, Postgres, Binance, App
-- [ ] Load values from environment variables / `.env`
+- [x] Implement a centralized config module using `pydantic-settings` (or `os.environ`)
+- [x] Define settings groups: Kafka, Redis, Postgres, Binance, App
+- [x] Load values from environment variables / `.env`
 
 ### 1.3 Logger (`core/utils/logger.py`)
-- [ ] Implement a structured logging setup (stdlib `logging` with JSON formatter or `structlog`)
-- [ ] Provide a `get_logger(name)` factory function used across the entire project
+- [x] Implement a structured logging setup (stdlib `logging` with JSON formatter or `structlog`)
+- [x] Provide a `get_logger(name)` factory function used across the entire project
 
 ### 1.4 Dependencies
-- [ ] Add required packages to `pyproject.toml`:
+- [x] Add required packages to `pyproject.toml`:
   - `confluent-kafka` or `aiokafka`
   - `websockets` (already present)
   - `redis` / `aioredis`
@@ -39,136 +39,136 @@
 ## Phase 2 — Core Infrastructure Layer (`core/`)
 
 ### 2.1 Kafka Admin (`core/kafka/admin.py`)
-- [ ] Create a Kafka admin client wrapper
-- [ ] Expose helper to create topics programmatically (used by scripts)
+- [x] Create a Kafka admin client wrapper
+- [x] Expose helper to create topics programmatically (used by scripts)
 
 ### 2.2 Kafka Producer (`core/kafka/producer.py`)
-- [ ] Implement a reusable `KafkaProducer` class/wrapper
-- [ ] Support JSON serialization, key-based partitioning (by symbol), and delivery callbacks
-- [ ] Provide `send(topic, key, value)` async-safe method
+- [x] Implement a reusable `KafkaProducer` class/wrapper
+- [x] Support JSON serialization, key-based partitioning (by symbol), and delivery callbacks
+- [x] Provide `send(topic, key, value)` async-safe method
 
 ### 2.3 Kafka Consumer (`core/kafka/consumer.py`)
-- [ ] Implement a reusable `KafkaConsumer` base class/wrapper
-- [ ] Support JSON deserialization, consumer group management, and manual commit
-- [ ] Provide a `consume(handler)` loop pattern
+- [x] Implement a reusable `KafkaConsumer` base class/wrapper
+- [x] Support JSON deserialization, consumer group management, and manual commit
+- [x] Provide a `consume(handler)` loop pattern
 
 ### 2.4 Kafka Schemas (`core/kafka/schemas.py`)
-- [ ] Define Pydantic models for all event schemas:
+- [x] Define Pydantic models for all event schemas:
   - `TickEvent` (symbol, price, qty, timestamp, trade_id)
   - `CandleEvent` (symbol, interval, open, high, low, close, volume, open_time, close_time)
   - `IndicatorEvent` (symbol, interval, indicator_name, value, timestamp)
 
 ### 2.5 Binance WebSocket Client (`core/binance/ws_client.py`)
-- [ ] Implement a WebSocket client connecting to Binance `@trade` stream
-- [ ] Support multiple symbols via combined stream URL
-- [ ] Parse raw messages into `TickEvent` schema
-- [ ] Handle reconnection logic with exponential backoff
+- [x] Implement a WebSocket client connecting to Binance `@trade` stream
+- [x] Support multiple symbols via combined stream URL
+- [x] Parse raw messages into `TickEvent` schema
+- [x] Handle reconnection logic with exponential backoff
 
 ### 2.6 PostgreSQL Client (`core/db/postgres.py`)
-- [ ] Implement a DB connection pool / session manager
-- [ ] Provide helper methods for executing queries and batch inserts
-- [ ] Create table initialization (migrations or raw DDL):
+- [x] Implement a DB connection pool / session manager
+- [x] Provide helper methods for executing queries and batch inserts
+- [x] Create table initialization (migrations or raw DDL):
   - `candles` table (symbol, interval, open, high, low, close, volume, open_time, close_time)
   - `indicators` table (symbol, interval, name, value, timestamp)
 
 ### 2.7 Redis Client (`core/cache/redis_client.py`)
-- [ ] Implement a Redis connection wrapper
-- [ ] Provide `get`, `set`, `hset`, `hget` helpers with serialization support
-- [ ] Support TTL-based expiration
+- [x] Implement a Redis connection wrapper
+- [x] Provide `get`, `set`, `hset`, `hget` helpers with serialization support
+- [x] Support TTL-based expiration
 
 ---
 
 ## Phase 3 — Infrastructure Definitions (`infra/`)
 
 ### 3.1 Topic Definitions (`infra/kafka/topics.py`)
-- [ ] Define a `TOPICS` config dict/list with:
+- [x] Define a `TOPICS` config dict/list with:
   - `market.ticks` — partitions by symbol
   - `market.candles.1s`
   - `market.candles.1m`
   - `market.indicators.realtime`
   - `market.indicators.persisted`
-- [ ] Include partition count and replication factor per topic
+- [x] Include partition count and replication factor per topic
 
 ### 3.2 Topic Creation Script (`scripts/create_topics.py`)
-- [ ] Read topic definitions from `infra/kafka/topics.py`
-- [ ] Use `core/kafka/admin.py` to idempotently create all topics
-- [ ] Log results (created / already exists)
+- [x] Read topic definitions from `infra/kafka/topics.py`
+- [x] Use `core/kafka/admin.py` to idempotently create all topics
+- [x] Log results (created / already exists)
 
 ---
 
 ## Phase 4 — Market Data Producer (`src/producers/`)
 
 ### 4.1 Tick Mapper (`src/producers/market_data/mapper.py`)
-- [ ] Implement `map_trade_to_tick(raw_msg) -> TickEvent`
-- [ ] Normalize Binance raw trade fields to internal schema
+- [x] Implement `map_trade_to_tick(raw_msg) -> TickEvent`
+- [x] Normalize Binance raw trade fields to internal schema
 
 ### 4.2 Market Data Producer (`src/producers/market_data/producer.py`)
-- [ ] Connect to Binance WS via `core/binance/ws_client.py`
-- [ ] For each incoming trade, map it via `mapper.py`
-- [ ] Publish `TickEvent` to `market.ticks` topic, keyed by symbol
-- [ ] Include error handling, graceful shutdown, and metrics logging
+- [x] Connect to Binance WS via `core/binance/ws_client.py`
+- [x] For each incoming trade, map it via `mapper.py`
+- [x] Publish `TickEvent` to `market.ticks` topic, keyed by symbol
+- [x] Include error handling, graceful shutdown, and metrics logging
 
 ---
 
 ## Phase 5 — Domain Services (`src/services/`)
 
 ### 5.1 Candle Service (`src/services/candle_service.py`)
-- [ ] Implement `CandleAggregator` that maintains in-memory OHLCV state per symbol
-- [ ] Accept ticks and aggregate into time-bucketed candles (1s window)
-- [ ] Emit a `CandleEvent` when the window closes
-- [ ] Support reset/roll-over for the next window
+- [x] Implement `CandleAggregator` that maintains in-memory OHLCV state per symbol
+- [x] Accept ticks and aggregate into time-bucketed candles (1s window)
+- [x] Emit a `CandleEvent` when the window closes
+- [x] Support reset/roll-over for the next window
 
 ### 5.2 Indicator Service (`src/services/indicator_service.py`)
-- [ ] Implement indicator calculations on top of candle data:
-  - **SMA** (Simple Moving Average)
-  - **EMA** (Exponential Moving Average)
-  - **RSI** (Relative Strength Index)
-  - **VWAP** (Volume-Weighted Average Price)
-- [ ] Accept a `CandleEvent` and return a list of `IndicatorEvent`
+- [x] Implement indicator calculations on top of candle data:
+  - **SMA** (Simple Moving Average) — via TA-Lib
+  - **EMA** (Exponential Moving Average) — via TA-Lib
+  - **RSI** (Relative Strength Index) — via TA-Lib
+  - **VWAP** (Volume-Weighted Average Price) — cálculo manual (cumsum)
+- [x] Accept a `CandleEvent` and return a list of `IndicatorEvent`
 
 ### 5.3 Selector Service (`src/services/selector_service.py`)
-- [ ] Implement routing logic to decide whether an indicator event should be:
+- [x] Implement routing logic to decide whether an indicator event should be:
   - Sent to the **realtime** path (Redis cache)
   - Sent to the **persisted** path (PostgreSQL storage)
   - Or both
-- [ ] Make routing configurable (e.g., all indicators go to both by default)
+- [x] Make routing configurable (e.g., all indicators go to both by default)
 
 ---
 
 ## Phase 6 — Stream Consumers (`src/consumers/`)
 
 ### 6.1 Candle 1s Consumer (`src/consumers/candles/candle_1s_consumer.py`)
-- [ ] Subscribe to `market.ticks`
-- [ ] Use `CandleService` to aggregate ticks into 1-second candles
-- [ ] Publish resulting `CandleEvent` to `market.candles.1s`
+- [x] Subscribe to `market.ticks`
+- [x] Use `CandleService` to aggregate ticks into 1-second candles
+- [x] Publish resulting `CandleEvent` to `market.candles.1s`
 
 ### 6.2 Candle 1m Consumer (`src/consumers/candles/candle_1m_consumer.py`)
-- [ ] Subscribe to `market.candles.1s`
-- [ ] Aggregate 1s candles into 1-minute candles
-- [ ] Publish resulting `CandleEvent` to `market.candles.1m`
+- [x] Subscribe to `market.candles.1s`
+- [x] Aggregate 1s candles into 1-minute candles
+- [x] Publish resulting `CandleEvent` to `market.candles.1m`
 
 ### 6.3 Indicators 1s Consumer (`src/consumers/indicators/indicators_1s_consumer.py`)
-- [ ] Subscribe to `market.candles.1s`
-- [ ] Use `IndicatorService` to compute indicators on 1s candles
-- [ ] Use `SelectorService` to route output to `market.indicators.realtime` and/or `market.indicators.persisted`
+- [x] Subscribe to `market.candles.1s`
+- [x] Use `IndicatorService` to compute indicators on 1s candles
+- [x] Use `SelectorService` to route output to `market.indicators.realtime` and/or `market.indicators.persisted`
 
 ### 6.4 Indicators 1m Consumer (`src/consumers/indicators/indicators_1m_consumer.py`)
-- [ ] Subscribe to `market.candles.1m`
-- [ ] Use `IndicatorService` to compute indicators on 1m candles
-- [ ] Use `SelectorService` to route output
+- [x] Subscribe to `market.candles.1m`
+- [x] Use `IndicatorService` to compute indicators on 1m candles
+- [x] Use `SelectorService` to route output
 
 ### 6.5 Cache Consumer (`src/consumers/cache/cache_consumer.py`)
-- [ ] Subscribe to `market.indicators.realtime`
-- [ ] Write/update indicator values in Redis (keyed by `symbol:indicator:interval`)
-- [ ] Set appropriate TTLs
+- [x] Subscribe to `market.indicators.realtime`
+- [x] Write/update indicator values in Redis (keyed by `symbol:indicator:interval`)
+- [x] Set appropriate TTLs
 
 ### 6.6 Candle Storage Consumer (`src/consumers/storage/candle_storage_consumer.py`)
-- [ ] Subscribe to `market.candles.1s` and/or `market.candles.1m`
-- [ ] Batch-insert candle records into PostgreSQL `candles` table
+- [x] Subscribe to `market.candles.1s` and/or `market.candles.1m`
+- [x] Batch-insert candle records into PostgreSQL `candles` table
 
 ### 6.7 Indicator Storage Consumer (`src/consumers/storage/indicator_storage_consumer.py`)
-- [ ] Subscribe to `market.indicators.persisted`
-- [ ] Batch-insert indicator records into PostgreSQL `indicators` table
+- [x] Subscribe to `market.indicators.persisted`
+- [x] Batch-insert indicator records into PostgreSQL `indicators` table
 
 ---
 
